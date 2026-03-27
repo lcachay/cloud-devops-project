@@ -22,7 +22,7 @@ jobs:
 
       - name: Deploy
         run: |
-          INSTANCE_ID=i-i-089a96dbb874a6380
+          INSTANCE_ID=i-089a96dbb874a6380
           aws ssm send-command \
             --targets "Key=instanceIds,Values=$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
