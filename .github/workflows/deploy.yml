@@ -13,17 +13,19 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v6
 
-      - name: Setup SSH
-        run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
-          chmod 600 key.pem
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Deploy
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd cloud-devops-project
-            git reset --hard origin/prod
-            npm ci --omit=dev --no-audit --no-fund
-            npm run build
-            pm2 restart cloud-devops-project || pm2 start npm --name "cloud-devops-project" -- start -- -H 0.0.0.0
-          EOF
+          INSTANCE_ID=i-i-089a96dbb874a6380
+          aws ssm send-command \
+            --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy from GitHub Actions" \
+            --parameters 'commands=["echo Hello from SSM","uptime","git reset --hard origin/prod"]' \
+            --region ${{ secrets.AWS_REGION }}
