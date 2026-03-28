@@ -13,6 +13,7 @@ jobs:
       AWS_REGION: ${{ vars.AWS_REGION }}
       ENVIRONMENT: ${{ github.ref_name == 'prod' && 'production' || 'development' }}
       INSTANCE_ID: ${{ github.ref_name == 'prod' && vars.PROD_INSTANCE_ID || vars.DEV_INSTANCE_ID }}
+      S3_BUCKET: ${{ vars.S3_BUCKET }}
 
     steps:
       - name: Checkout repo
@@ -24,6 +25,22 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 20
+
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
+
+      - name: Build app
+        run: npm run build
+
+      - name: Prepare artifact
+        run: |
+          tar -czf app.tar.gz .next node_modules package.json public
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: app.tar.gz
 
       - name: Set Build Info
         run: |
@@ -40,6 +57,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Upload to S3
+        run: |
+          aws s3 cp app.tar.gz s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz
+
       - name: Deploy
         run: |
           aws ssm send-command \
@@ -48,25 +69,15 @@ jobs:
             --comment "Deploy from GitHub Actions" \
             --cloud-watch-output-config CloudWatchOutputEnabled=true \
             --parameters 'commands=[
+            "set -e",
             "uptime",
-            "cd /opt/cloud-devops-project",
-            "git config --global --add safe.directory /opt/cloud-devops-project",
-            "git fetch origin",
-            "git switch ${{ github.ref_name }} || git switch -C ${{ github.ref_name }} origin/${{ github.ref_name }}",
-            "git reset --hard origin/${{ github.ref_name }}",
-            "cat > .env.${{ github.ref_name }} <<EOF
-          NODE_ENV=${ENVIRONMENT}
-          ENVIRONMENT=${ENVIRONMENT}
-          AWS_REGION='${{ env.AWS_REGION }}'
-          VERSION='${VERSION}'
-          COMMIT_HASH='${COMMIT_HASH}'
-          BRANCH='${BRANCH}'
-          BUILD_TIME='${BUILD_TIME}'
-          DEPLOY_TIME='${DEPLOY_TIME}'
-          EOF",
-            "rm -rf .next",
-            "npm ci --no-audit --no-fund",
-            "npm run build",
+            "cd /opt",
+            "rm -rf cloud-devops-project",
+            "mkdir cloud-devops-project",
+            "cd cloud-devops-project",
+            "aws s3 cp s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz app.tar.gz",
+            "tar -xzf app.tar.gz",
+            "printf \"NODE_ENV=%s\nENVIRONMENT=%s\n\" \"${{ env.ENVIRONMENT }}\" \"${{ env.ENVIRONMENT }}\" > .env",
             "pm2 restart cloud-devops-project || pm2 start npm --name cloud-devops-project -- start -- -H 0.0.0.0"
-            ,]' \
+            ]' \
             --region ${{ env.AWS_REGION }}
