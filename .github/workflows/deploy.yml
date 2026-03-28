@@ -77,6 +77,6 @@ jobs:
             "cd cloud-devops-project",
             "aws s3 cp s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz app.tar.gz",
             "tar -xzf app.tar.gz",
-            "pm2 restart cloud-devops-project || pm2 start npm --name cloud-devops-project -- start -- -H 0.0.0.0"
+            "pm2 restart cloud-devops-project --env ${{ env.ENVIRONMENT }} || pm2 start npm --name cloud-devops-project -- start -- -H 0.0.0.0 --env ${{ env.ENVIRONMENT }}"
             ]' \
             --region ${{ env.AWS_REGION }}
