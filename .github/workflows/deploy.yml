@@ -77,6 +77,6 @@ jobs:
             "cd cloud-devops-project",
             "aws s3 cp s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz app.tar.gz",
             "tar -xzf app.tar.gz",
-            "pm2 start ecosystem.config.js --env ${{ENVIRONMENT}} || pm2 restart ecosystem.config.js --env ${{ENVIRONMENT}}"
+            "pm2 start ecosystem.config.js --env ${{ env.ENVIRONMENT }} || pm2 restart ecosystem.config.js --env ${{ env.ENVIRONMENT }}"
             ]' \
             --region ${{ env.AWS_REGION }}
