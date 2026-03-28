@@ -43,7 +43,7 @@ jobs:
       - name: Deploy
         run: |
           aws ssm send-command \
-            --targets "Key=InstanceIds,Values=$INSTANCE_ID" \
+            --instance-ids $INSTANCE_ID \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy from GitHub Actions" \
             --parameters 'commands=[
