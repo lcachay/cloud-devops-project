@@ -50,6 +50,7 @@ jobs:
             --parameters 'commands=[
             "uptime",
             "cd /opt/cloud-devops-project",
+            "git config --global --add safe.directory /opt/cloud-devops-project",
             "git fetch origin",
             "git switch ${{ github.ref_name }} || git switch -C ${{ github.ref_name }} origin/${{ github.ref_name }}",
             "git reset --hard origin/${{ github.ref_name }}",
