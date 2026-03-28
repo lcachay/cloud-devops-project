@@ -47,6 +47,7 @@ export default function Dashboard() {
       <p>Branch: {data.branch}</p>
       <p>Region: {data.region}</p>
       <p>Server Uptime: {data.uptime}</p>
+      <marquee>test</marquee>
     </div>
   );
 }
