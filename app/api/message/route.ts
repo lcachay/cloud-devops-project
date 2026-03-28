@@ -1,5 +1,7 @@
+import { NextResponse } from "next/server";
+
 export async function GET() {
-  return Response.json({
-    message: process.env.NEXT_PUBLIC_API_MESSAGE || "Fallback message",
+  return NextResponse.json({
+    message: "Message from API route",
   });
 }
