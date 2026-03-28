@@ -48,7 +48,7 @@ jobs:
             --comment "Deploy from GitHub Actions" \
             --parameters 'commands=[
             "uptime",
-            "cd /home/ec2-user/cloud-devops-project",
+            "cd /opt/cloud-devops-project",
             "git fetch origin",
             "git switch ${{ github.ref_name }} || git switch -C ${{ github.ref_name }} origin/${{ github.ref_name }}",
             "git reset --hard origin/${{ github.ref_name }}",
