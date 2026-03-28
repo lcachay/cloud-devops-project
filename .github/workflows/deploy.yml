@@ -32,12 +32,9 @@ jobs:
       - name: Build app
         run: npm run build
 
-      - name: Check files
-        run: ls -la
-
       - name: Prepare artifact
         run: |
-          tar -czf app.tar.gz .next node_modules package.json public
+          tar -czf app.tar.gz .next node_modules package.json public --ignore-failed-read
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
