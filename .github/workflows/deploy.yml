@@ -52,8 +52,8 @@ jobs:
             "git switch ${{ github.ref_name }} || git switch -c ${{ github.ref_name }} origin/${{ github.ref_name }}",
             "git reset --hard origin/${{ github.ref_name }}",
             "cat > .env.${{ github.ref_name }} <<EOF
-            NODE_ENV=${{ github.ref_name == '\''prod'\'' && '\''production'\'' || '\''development'\'' }}
-            ENVIRONMENT=${{ github.ref_name == '\''prod'\'' && '\''production'\'' || '\''development'\'' }}
+            NODE_ENV=${ENVIRONMENT}
+            ENVIRONMENT=${ENVIRONMENT}
             AWS_REGION='${{ env.AWS_REGION }}'
             VERSION='${VERSION}'
             COMMIT_HASH='${COMMIT_HASH}'
