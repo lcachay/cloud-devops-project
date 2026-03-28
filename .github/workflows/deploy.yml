@@ -77,7 +77,6 @@ jobs:
             "cd cloud-devops-project",
             "aws s3 cp s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz app.tar.gz",
             "tar -xzf app.tar.gz",
-            "pm2 delete all || true",
             "pm2 start ecosystem.config.js --env ${{ env.ENVIRONMENT }}  --update-env",
             "pm2 save"
             ]' \
