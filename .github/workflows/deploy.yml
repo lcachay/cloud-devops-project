@@ -29,26 +29,26 @@ jobs:
       - name: Install deps
         run: npm ci --no-audit --no-fund
 
+      - name: Set Build Info
+        run: |
+          echo "VERSION=${GITHUB_SHA}" >> .env
+          echo "COMMIT_HASH=${GITHUB_SHA}" >> .env
+          echo "BRANCH=${GITHUB_REF_NAME}" >> .env
+          echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> .env
+          echo "DEPLOY_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> .env
+
       - name: Build app
         run: npm run build
 
       - name: Prepare artifact
         run: |
-          tar -czf app.tar.gz .next node_modules package.json public --ignore-failed-read
+          tar -czf app.tar.gz .next node_modules package.json public .env --ignore-failed-read
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: app
           path: app.tar.gz
-
-      - name: Set Build Info
-        run: |
-          echo "VERSION=${GITHUB_SHA}" >> $GITHUB_ENV
-          echo "COMMIT_HASH=${GITHUB_SHA}" >> $GITHUB_ENV
-          echo "BRANCH=${GITHUB_REF_NAME}" >> $GITHUB_ENV
-          echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
-          echo "DEPLOY_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -77,7 +77,6 @@ jobs:
             "cd cloud-devops-project",
             "aws s3 cp s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz app.tar.gz",
             "tar -xzf app.tar.gz",
-            "printf \"NODE_ENV=%s\nENVIRONMENT=%s\n\" \"${{ env.ENVIRONMENT }}\" \"${{ env.ENVIRONMENT }}\" > .env",
             "pm2 restart cloud-devops-project || pm2 start npm --name cloud-devops-project -- start -- -H 0.0.0.0"
             ]' \
             --region ${{ env.AWS_REGION }}
