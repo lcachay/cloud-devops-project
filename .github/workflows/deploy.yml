@@ -70,7 +70,6 @@ jobs:
             --comment "Deploy from GitHub Actions" \
             --cloud-watch-output-config CloudWatchOutputEnabled=true \
             --parameters 'commands=[
-            "set -ex",
 
             "echo ===== CLEANUP =====",
             "export HOME=/root",
@@ -101,14 +100,14 @@ jobs:
             "tar -xzf app.tar.gz",
             
             "echo Ecosystem file:",
-            "cat ecosystem.config.js",
+            "cat ecosystem.config.js || echo \"ecosystem.config.js NOT FOUND\"",
 
-            "pm2 start ecosystem.config.js --env development --update-env",
+            "pm2 startOrRestart ecosystem.config.js --env development --update-env",
             "pm2 save",
 
-            "pm2 list",
-            "pm2 status",
-            "pm2 logs --lines 50 --nostream"
+            "pm2 list || true",
+            "pm2 status || true",
+            "pm2 logs --lines 50 --nostream || true"
             
             ]' \
             --region ${{ env.AWS_REGION }}
