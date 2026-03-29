@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "cloud-devops-project",
       script: "node_modules/next/dist/bin/next",
-      args: "start -- -p 3000 -H 0.0.0.0",
+      args: "start -p 3000 -H 0.0.0.0",
       watch: false,
       cwd: "/opt/cloud-devops-project",
       env: {
