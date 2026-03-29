@@ -7,6 +7,10 @@ module.exports = {
       watch: false,
       cwd: "/opt/cloud-devops-project",
       exec_mode: "fork",
+      instances: 1,
+      autorestart: false,
+      kill_timeout: 5000,
+      listen_timeout: 8000,
       env: {
         NODE_ENV: "production",
         ENVIRONMENT: "development",
