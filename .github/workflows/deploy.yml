@@ -102,7 +102,7 @@ jobs:
             "echo \"Ecosystem file:\"",
             "test -f ecosystem.config.cjs || (echo \"Missing ecosystem file\" && exit 1)",
 
-            "pm2 jlist | jq -r '.[] | "CPU=\(.monit.cpu)\nMEMORY=\(.monit.memory)\nPROCESS_STATUS=\(.pm2_env.status)\nUPTIME=\(.pm2_env.pm_uptime)\nRESTART_COUNT=\(.pm2_env.restart_time)"' > .pm2-env",
+            "pm2 jlist | jq -r '.[] | \"CPU=\\(.monit.cpu)\\nMEMORY=\\(.monit.memory)\\nPROCESS_STATUS=\\(.pm2_env.status)\\nUPTIME=\\(.pm2_env.pm_uptime)\\nRESTART_COUNT=\\(.pm2_env.restart_time)\"' > .pm2-env",
             
             "sleep 3",
             "source .pm2-env",
