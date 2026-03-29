@@ -86,7 +86,7 @@ jobs:
               "export APP_NAME='${{ env.APP_NAME }}'",
               "aws s3 cp s3://${{ env.S3_BUCKET }}/deploy.sh /tmp/deploy.sh",
               "chmod +x /tmp/deploy.sh",
-              "bash /tmp/deploy.sh"
+              "bash -x /tmp/deploy.sh"
             ]' \
             --region ${{ env.AWS_REGION }}
 

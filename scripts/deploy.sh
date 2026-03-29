@@ -1,3 +1,4 @@
+exec > >(tee -a /tmp/deploy.log) 2>&1
 LOCK_FILE=/tmp/deploy.lock
 
 if [ -f "$LOCK_FILE" ]; then
@@ -41,3 +42,6 @@ sudo pm2 startOrRestart ecosystem.config.cjs --env $ENVIRONMENT --update-env
 sudo pm2 save
 
 rm -f "$LOCK_FILE"
+
+echo "Deploy finished, see /tmp/deploy.log for details"
+cat /tmp/deploy.log
