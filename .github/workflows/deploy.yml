@@ -70,13 +70,18 @@ jobs:
             --comment "Deploy from GitHub Actions" \
             --cloud-watch-output-config CloudWatchOutputEnabled=true \
             --parameters 'commands=[
-            "set -e",
+            "set -ex",
+            "pwd",
+            "ls -la /opt",
             "uptime",
             "cd /opt",
             "rm -rf cloud-devops-project",
             "mkdir cloud-devops-project",
             "cd cloud-devops-project",
+            "echo 'Downloading artifact...'",
             "aws s3 cp s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz app.tar.gz",
+            "ls -la",
+            "echo 'Extracting...'",
             "tar -xzf app.tar.gz",
             "ls -la",
             "cat ecosystem.config.js",
