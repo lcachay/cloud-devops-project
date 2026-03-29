@@ -1,35 +1,31 @@
-let totalRequests = 0;
-let totalErrors = 0;
-let totalResponseTime = 0;
+import { httpRequestsTotal, httpErrorsTotal, httpDuration } from "../../middleware";
 
-let requestsLastSecond = 0;
-let rps = 0;
+export async function getTrafficMetrics() {
+  const requestsMetric = await httpRequestsTotal.get();
+  const errorsMetric = await httpErrorsTotal.get();
+  const durationMetric = await httpDuration.get();
 
-// requests per second calculation
-setInterval(() => {
-  rps = requestsLastSecond;
-  requestsLastSecond = 0;
-}, 1000);
+  const totalRequests = requestsMetric.values.reduce((acc, v) => acc + v.value, 0);
+  const totalErrors = errorsMetric.values.reduce((acc, v) => acc + v.value, 0);
 
-export function trackRequest(duration: number, isError = false) {
-  totalRequests++;
-  requestsLastSecond++;
+  const totalDuration = durationMetric.values
+    .filter((v) => v.metricName && v.metricName.endsWith("_sum"))
+    .reduce((acc, v) => acc + v.value, 0);
 
-  totalResponseTime += duration;
+  const count = durationMetric.values
+    .filter((v) => v.metricName && v.metricName.endsWith("_count"))
+    .reduce((acc, v) => acc + v.value, 0);
+  const avgResponseTime = count > 0 ? totalDuration / count : 0;
 
-  if (isError) totalErrors++;
-}
+  const errorRate = totalRequests > 0 ? ((totalErrors / totalRequests) * 100).toFixed(2) + "%" : "0%";
 
-export function getTrafficMetrics() {
-  const avgResponseTime = totalRequests > 0 ? totalResponseTime / totalRequests : 0;
-
-  const errorRate = totalRequests > 0 ? totalErrors / totalRequests : 0;
+  const requestsPerSecond = totalRequests / process.uptime();
 
   return {
-    requestsPerSecond: rps,
     totalRequests,
     totalErrors,
-    errorRate: errorRate.toFixed(2),
-    avgResponseTime: `${avgResponseTime.toFixed(2)} ms`,
+    avgResponseTime,
+    errorRate,
+    requestsPerSecond,
   };
 }

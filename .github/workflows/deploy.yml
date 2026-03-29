@@ -19,6 +19,7 @@ jobs:
       ENVIRONMENT: ${{ github.ref_name == 'prod' && 'production' || 'development' }}
       INSTANCE_ID: ${{ github.ref_name == 'prod' && vars.PROD_INSTANCE_ID || vars.DEV_INSTANCE_ID }}
       S3_BUCKET: ${{ vars.S3_BUCKET }}
+      APP_NAME: cloud-devops-project
 
     steps:
       - name: Checkout repo
@@ -36,11 +37,14 @@ jobs:
 
       - name: Set Build Info
         run: |
+          echo "APP_NAME=${{ env.APP_NAME }}" >> .env
+          echo "AWS_REGION=${{ env.AWS_REGION }}" >> .env
           echo "VERSION=${GITHUB_SHA}" >> .env
-          echo "COMMIT_HASH=${GITHUB_SHA}" >> .env
           echo "BRANCH=${GITHUB_REF_NAME}" >> .env
           echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> .env
+          echo "COMMIT_HASH=${GITHUB_SHA}" >> .env
           echo "DEPLOY_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> .env
+          echo "DEPLOY_STATUS=success" >> .env
 
       - name: Build app
         run: npm run build
@@ -109,3 +113,8 @@ jobs:
             "rm -f $LOCK_FILE"
             ]' \
             --region ${{ env.AWS_REGION }}
+
+      - name: Mark Deploy Failed if Previous Step Failed
+        if: failure()
+        run: |
+          echo "DEPLOY_STATUS=failed" >> .env
