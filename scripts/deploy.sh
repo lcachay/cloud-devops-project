@@ -1,12 +1,4 @@
 exec > >(tee -a /tmp/deploy.log) 2>&1
-LOCK_FILE=/tmp/deploy.lock
-
-if [ -f "$LOCK_FILE" ]; then
-    echo "Another deployment is running. Exiting."
-    exit 0
-fi
-
-touch "$LOCK_FILE"
 
 echo "CLEANUP"
 
@@ -31,7 +23,6 @@ tar -xzf app.tar.gz
 echo "Ecosystem file:"
 if [ ! -f ecosystem.config.cjs ]; then
     echo "Missing ecosystem file"
-    rm -f "$LOCK_FILE"
     exit 1
 fi
 
@@ -40,8 +31,6 @@ source .pm2-env
 
 sudo pm2 startOrRestart ecosystem.config.cjs --env $ENVIRONMENT --update-env
 sudo pm2 save
-
-rm -f "$LOCK_FILE"
 
 echo "Deploy finished, see /tmp/deploy.log for details"
 cat /tmp/deploy.log
