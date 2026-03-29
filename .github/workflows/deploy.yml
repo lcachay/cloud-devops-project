@@ -76,6 +76,7 @@ jobs:
             "pm2 delete all || true",
             "pm2 kill || true",
             "pkill -9 -f PM2 || true",
+            "pkill -9 -f node || true",
             "pkill -9 -f next-server || true",
             "pkill -9 -f \"npm start\" || true",
             "pkill -9 -f \"pm2 logs\" || true",
@@ -83,6 +84,8 @@ jobs:
 
             "echo ===== VERIFY PORT FREE =====",
             "ss -ltnp | grep 3000 || true",
+            "fuser -k 3000/tcp || true",
+            "sleep 2",
 
             "export PM2_HOME=/root/.pm2",
             "chown -R root:root /opt/cloud-devops-project",
@@ -100,10 +103,10 @@ jobs:
             "tar -xzf app.tar.gz",
             
             "echo Ecosystem file:",
-            "cat ecosystem.config.js || echo \"ecosystem.config.js NOT FOUND\"",
+            "test -f ecosystem.config.js || (echo \"Missing ecosystem file\" && exit 1)",
 
+            "sleep 3",
             "pm2 startOrRestart ecosystem.config.js --env development --update-env",
-            "pm2 save",
 
             "pm2 list || true",
             "pm2 status || true",
