@@ -31,21 +31,13 @@ PROCESS_STATUS=$(pm2 jlist | jq -r '.[0].pm2_env.status')
 UPTIME=$(pm2 jlist | jq '.[0].pm2_env.pm_uptime')
 RESTART_COUNT=$(pm2 jlist | jq '.[0].pm2_env.restart_time')
 
-# --- 2. Create temporary env file for PM2 ---
-cat > /tmp/pm2_metrics.env <<EOF
-CPU=$CPU
-MEMORY=$MEMORY
-PROCESS_STATUS=$PROCESS_STATUS
-UPTIME=$UPTIME
-RESTART_COUNT=$RESTART_COUNT
-EOF
+# --- 2. Export them in the current shell ---
+export CPU MEMORY PROCESS_STATUS UPTIME RESTART_COUNT
 
-# --- 3. Start/restart PM2 passing the env file ---
-sudo pm2 startOrRestart ecosystem.config.cjs \
-    --env $ENVIRONMENT \
-    --update-env \
-    --env-file /tmp/pm2_metrics.env
+# --- 3. Start/restart PM2 as root, preserving env ---
+sudo -E pm2 startOrRestart ecosystem.config.cjs --env $ENVIRONMENT --update-env
+sudo -E pm2 save
 
-sudo pm2 save
+sudo -E pm2 save
 
 echo "Deploy finished"
