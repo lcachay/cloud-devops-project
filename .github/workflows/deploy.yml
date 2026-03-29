@@ -84,6 +84,8 @@ jobs:
               "export GITHUB_SHA='${{ github.sha }}'",
               "export ENVIRONMENT='${{ env.ENVIRONMENT }}'",
               "export APP_NAME='${{ env.APP_NAME }}'",
+              "aws s3 cp s3://${{ env.S3_BUCKET }}/deploy.sh /tmp/deploy.sh",
+              "chmod +x /tmp/deploy.sh",
               "bash /tmp/deploy.sh"
             ]' \
             --region ${{ env.AWS_REGION }}
