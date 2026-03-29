@@ -65,9 +65,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Upload to S3
+      - name: Upload artifacts to S3
         run: |
           aws s3 cp app.tar.gz s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz
+
+      - name: Upload deploy script to S3
+        run: aws s3 cp scripts/deploy.sh s3://${{ env.S3_BUCKET }}/deploy.sh
 
       - name: Deploy
         run: |
@@ -77,39 +80,11 @@ jobs:
             --comment "Deploy from GitHub Actions" \
             --cloud-watch-output-config CloudWatchOutputEnabled=true \
             --parameters 'commands=[
-            "LOCK_FILE=/tmp/deploy.lock",
-            "if [ -f \"$LOCK_FILE\" ]; then echo \"Another deployment is running. Exiting.\"; exit 0; fi",
-            "touch $LOCK_FILE",
-
-            "echo \"CLEANUP\"",
-            "export HOME=/root",
-
-            "export PM2_HOME=/root/.pm2",
-            "chown -R root:root /opt/cloud-devops-project",
-
-            "uptime",
-            "cd /opt",
-            "rm -rf cloud-devops-project",
-            "mkdir cloud-devops-project",
-            "cd cloud-devops-project",
-
-            "echo \"Downloading artifact\"",
-            "aws s3 cp s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz app.tar.gz",
-
-            "echo \"Extracting\"",
-            "tar -xzf app.tar.gz",
-            
-            "echo \"Ecosystem file:\"",
-            "test -f ecosystem.config.cjs || (echo \"Missing ecosystem file\" && exit 1)",
-
-            "pm2 jlist | jq -r '\''.[] | [\"CPU=\" + (.monit.cpu|tostring), \"MEMORY=\" + (.monit.memory|tostring), \"PROCESS_STATUS=\" + .pm2_env.status, \"UPTIME=\" + (.pm2_env.pm_uptime|tostring), \"RESTART_COUNT=\" + (.pm2_env.restart_time|tostring)] | .[]'\'' > .pm2-env",
-            
-            "sleep 3",
-            "source .pm2-env",
-            "pm2 startOrRestart ecosystem.config.cjs --env development --update-env",
-            "pm2 save",
-            
-            "rm -f $LOCK_FILE"
+              "export S3_BUCKET='${{ env.S3_BUCKET }}'",
+              "export GITHUB_SHA='${{ github.sha }}'",
+              "export ENVIRONMENT='${{ env.ENVIRONMENT }}'",
+              "export APP_NAME='${{ env.APP_NAME }}'",
+              "bash /tmp/deploy.sh"
             ]' \
             --region ${{ env.AWS_REGION }}
 
@@ -117,3 +92,37 @@ jobs:
         if: failure()
         run: |
           echo "DEPLOY_STATUS=failed" >> .env
+
+# --parameters 'commands=[
+#             "LOCK_FILE=/tmp/deploy.lock",
+#             "if [ -f \"$LOCK_FILE\" ]; then echo \"Another deployment is running. Exiting.\"; exit 0; fi",
+#             "touch $LOCK_FILE",
+
+#             "echo \"CLEANUP\"",
+#             "export HOME=/root",
+
+#             "export PM2_HOME=/root/.pm2",
+#             "chown -R root:root /opt/cloud-devops-project",
+
+#             "uptime",
+#             "cd /opt",
+#             "rm -rf cloud-devops-project",
+#             "mkdir cloud-devops-project",
+#             "cd cloud-devops-project",
+
+#             "echo \"Downloading artifact\"",
+#             "aws s3 cp s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz app.tar.gz",
+
+#             "echo \"Extracting\"",
+#             "tar -xzf app.tar.gz",
+
+#             "echo \"Ecosystem file:\"",
+#             "test -f ecosystem.config.cjs || (echo \"Missing ecosystem file\" && exit 1)",
+
+#             "pm2 jlist | jq -r '\''.[] | [\"CPU=\" + (.monit.cpu|tostring), \"MEMORY=\" + (.monit.memory|tostring), \"PROCESS_STATUS=\" + .pm2_env.status, \"UPTIME=\" + (.pm2_env.pm_uptime|tostring), \"RESTART_COUNT=\" + (.pm2_env.restart_time|tostring)] | .[]'\'' > .pm2-env && source .pm2-env",
+
+#             "pm2 startOrRestart ecosystem.config.cjs --env development --update-env",
+#             "pm2 save",
+
+#             "rm -f $LOCK_FILE"
+#             ]' \
