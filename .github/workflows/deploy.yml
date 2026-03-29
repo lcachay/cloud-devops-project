@@ -71,7 +71,7 @@ jobs:
             --cloud-watch-output-config CloudWatchOutputEnabled=true \
             --parameters 'commands=[
 
-            "echo ===== CLEANUP =====",
+            "echo \"CLEANUP\"",
             "export HOME=/root",
             "pm2 delete all || true",
             "pm2 kill || true",
@@ -82,7 +82,7 @@ jobs:
             "pkill -9 -f \"pm2 logs\" || true",
             "sleep 2",
 
-            "echo ===== VERIFY PORT FREE =====",
+            "echo \"VERIFY PORT FREE\"",
             "ss -ltnp | grep 3000 || true",
             "fuser -k 3000/tcp || true",
             "sleep 2",
@@ -96,13 +96,13 @@ jobs:
             "mkdir cloud-devops-project",
             "cd cloud-devops-project",
 
-            "echo Downloading artifact...",
+            "echo \"Downloading artifact\"",
             "aws s3 cp s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz app.tar.gz",
 
-            "echo Extracting...",
+            "echo \"Extracting\"",
             "tar -xzf app.tar.gz",
             
-            "echo Ecosystem file:",
+            "echo \"Ecosystem file:\"",
             "test -f ecosystem.config.js || (echo \"Missing ecosystem file\" && exit 1)",
 
             "sleep 3",
