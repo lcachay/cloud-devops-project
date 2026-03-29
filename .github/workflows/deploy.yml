@@ -7,6 +7,10 @@ on:
       - dev
       - prod
 
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -70,6 +74,13 @@ jobs:
             --comment "Deploy from GitHub Actions" \
             --cloud-watch-output-config CloudWatchOutputEnabled=true \
             --parameters 'commands=[
+            LOCK_FILE=/tmp/deploy.lock
+            if [ -f "$LOCK_FILE" ]; then
+              echo "Another deployment is running. Exiting."
+              exit 0
+            fi
+
+            touch $LOCK_FILE
 
             "echo \"CLEANUP\"",
             "export HOME=/root",
@@ -111,6 +122,7 @@ jobs:
             "pm2 list || true",
             "pm2 status || true",
             "pm2 logs --lines 50 --nostream || true"
-            
+
+            rm -f $LOCK_FILE
             ]' \
             --region ${{ env.AWS_REGION }}
