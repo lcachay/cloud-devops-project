@@ -71,7 +71,20 @@ jobs:
             --cloud-watch-output-config CloudWatchOutputEnabled=true \
             --parameters 'commands=[
             "set -ex",
+
+            "echo ===== CLEANUP =====",
             "export HOME=/root",
+            "pm2 delete all || true",
+            "pm2 kill || true",
+            "pkill -9 -f PM2 || true",
+            "pkill -9 -f next-server || true",
+            "pkill -9 -f \"npm start\" || true",
+            "pkill -9 -f \"pm2 logs\" || true",
+            "sleep 2",
+
+            "echo ===== VERIFY PORT FREE =====",
+            "ss -ltnp | grep 3000 || true",
+
             "export PM2_HOME=/root/.pm2",
             "chown -R root:root /opt/cloud-devops-project",
 
@@ -91,10 +104,11 @@ jobs:
             "cat ecosystem.config.js",
 
             "pm2 start ecosystem.config.js --env development --update-env",
+            "pm2 save",
 
-            "echo pm2 logs",
             "pm2 list",
-            "pm2 logs cloud-devops-project --lines 100 --nostream || pm2 logs --lines 100 --nostream",
+            "pm2 status",
+            "pm2 logs --lines 50 --nostream"
             
             ]' \
             --region ${{ env.AWS_REGION }}
