@@ -77,9 +77,7 @@ jobs:
             "LOCK_FILE=/tmp/deploy.lock",
             "if [ -f \"$LOCK_FILE\" ]; then echo \"Another deployment is running. Exiting.\"; exit 0; fi",
             "touch $LOCK_FILE",
-
-            touch $LOCK_FILE
-
+            
             "echo \"CLEANUP\"",
             "export HOME=/root",
             "pm2 delete all || true",
