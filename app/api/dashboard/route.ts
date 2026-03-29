@@ -24,7 +24,7 @@ export async function GET() {
 
       memory: "unknown",
       cpu: "unknown",
-      processStatus: "unknown",
+      processStatus: process.env.status,
       uptime: "0s",
       restartCount: 0,
 
@@ -36,6 +36,7 @@ export async function GET() {
       totalErrors: trafficMetrics.totalErrors,
 
       env: process.env,
+      env2: process.env.env,
     };
 
     return NextResponse.json(metrics);
