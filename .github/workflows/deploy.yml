@@ -73,6 +73,7 @@ jobs:
             "set -ex",
             "pwd",
             "ls -la /opt",
+            "chown -R root:root /opt/cloud-devops-project",
             "uptime",
             "cd /opt",
             "rm -rf cloud-devops-project",
@@ -87,8 +88,11 @@ jobs:
             "cat ecosystem.config.js",
             "pm2 start ecosystem.config.js --env development --update-env",
             "pm2 list",
-            "pm2 logs --lines 50",
-            "node node_modules/next/dist/bin/next start -p 3000 -H 0.0.0.0"
+            "pm2 logs --lines 100 --nostream",
+            "pm2 logs cloud-devops-project --lines 100 --nostream",
+            "node -v",
+            "npm -v",
+            "cat package.json",
             
             ]' \
             --region ${{ env.AWS_REGION }}
