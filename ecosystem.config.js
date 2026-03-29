@@ -7,11 +7,11 @@ module.exports = {
       watch: false,
       cwd: "/opt/cloud-devops-project",
       env: {
-        NODE_ENV: "development",
+        NODE_ENV: "production",
         ENVIRONMENT: "development",
       },
       env_development: {
-        NODE_ENV: "development",
+        NODE_ENV: "production",
         ENVIRONMENT: "development",
       },
       env_production: {
