@@ -1,6 +1,5 @@
 name: Deploy to EC2
-# "pm2 start ecosystem.config.js --env ${{ env.ENVIRONMENT }}  --update-env",
-#"pm2 save"
+
 on:
   push:
     branches:
@@ -30,7 +29,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Install deps
         run: npm ci --no-audit --no-fund
@@ -105,11 +104,8 @@ jobs:
 
             "sleep 3",
             "pm2 startOrRestart ecosystem.config.js --env development --update-env",
-
-            "pm2 list || true",
-            "pm2 status || true",
-            "pm2 logs --lines 50 --nostream || true",
-
+            "pm2 save",
+            
             "rm -f $LOCK_FILE"
             ]' \
             --region ${{ env.AWS_REGION }}
