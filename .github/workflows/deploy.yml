@@ -113,7 +113,7 @@ jobs:
             "test -f ecosystem.config.js || (echo \"Missing ecosystem file\" && exit 1)",
 
             "sleep 3",
-            "pm2 startOrRestart ecosystem.config.js --env development --update-env --no-autorestart",
+            "pm2 start ecosystem.config.js --env development --update-env --no-autorestart",
 
             "pm2 list || true",
             "pm2 status || true",
