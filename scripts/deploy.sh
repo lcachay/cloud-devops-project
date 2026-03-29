@@ -1,5 +1,3 @@
-exec > >(tee -a /tmp/deploy.log) 2>&1
-
 echo "CLEANUP"
 
 export HOME=/root
@@ -50,5 +48,4 @@ sudo pm2 startOrRestart ecosystem.config.cjs \
 
 sudo pm2 save
 
-echo "Deploy finished, see /tmp/deploy.log for details"
-cat /tmp/deploy.log
+echo "Deploy finished"

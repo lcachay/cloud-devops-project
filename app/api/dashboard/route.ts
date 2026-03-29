@@ -36,7 +36,9 @@ export async function GET() {
       totalErrors: trafficMetrics.totalErrors,
 
       env: process.env,
-      env2: JSON.stringify(process.env),
+      env_dev: JSON.stringify(process.env.env_development),
+      env_prod: JSON.stringify(process.env.env_production),
+      env_env: JSON.stringify(process.env.env),
     };
 
     return NextResponse.json(metrics);
