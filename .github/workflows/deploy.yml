@@ -3,29 +3,129 @@ name: Deploy to EC2
 on:
   push:
     branches:
+      - dev
       - prod
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      ENVIRONMENT: ${{ github.ref_name == 'prod' && 'production' || 'development' }}
+      INSTANCE_ID: ${{ github.ref_name == 'prod' && vars.PROD_INSTANCE_ID || vars.DEV_INSTANCE_ID }}
+      S3_BUCKET: ${{ vars.S3_BUCKET }}
+      APP_NAME: cloud-devops-project
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
+
+      - name: Set Build Info
+        run: |
+          APP_VERSION=$(node -p "require('./package.json').version")
+          echo "APP_NAME=${{ env.APP_NAME }}" >> .env
+          echo "AWS_REGION=${{ env.AWS_REGION }}" >> .env
+          echo "VERSION=$APP_VERSION" >> .env
+          echo "BRANCH=${GITHUB_REF_NAME}" >> .env
+          echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> .env
+          echo "COMMIT_HASH=${GITHUB_SHA}" >> .env
+          echo "DEPLOY_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> .env
+          echo "DEPLOY_STATUS=success" >> .env
+
+      - name: Build app
+        run: npm run build
+
+      - name: Prepare artifact
+        run: |
+          tar -czf app.tar.gz .next node_modules package.json public ecosystem.config.cjs .env --ignore-failed-read
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: app.tar.gz
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload artifacts to S3
+        run: |
+          aws s3 cp app.tar.gz s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz
+
+      - name: Upload deploy script to S3
+        run: aws s3 cp scripts/deploy.sh s3://${{ env.S3_BUCKET }}/deploy.sh
 
       - name: Deploy
         run: |
-          INSTANCE_ID=i-089a96dbb874a6380
           aws ssm send-command \
-            --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+            --instance-ids $INSTANCE_ID \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy from GitHub Actions" \
-            --parameters 'commands=["echo Hello from SSM","uptime","git reset --hard origin/prod"]' \
-            --region ${{ secrets.AWS_REGION }}
+            --cloud-watch-output-config CloudWatchOutputEnabled=true \
+            --parameters 'commands=[
+              "export S3_BUCKET='${{ env.S3_BUCKET }}'",
+              "export GITHUB_SHA='${{ github.sha }}'",
+              "export ENVIRONMENT='${{ env.ENVIRONMENT }}'",
+              "export APP_NAME='${{ env.APP_NAME }}'",
+              "aws s3 cp s3://${{ env.S3_BUCKET }}/deploy.sh /tmp/deploy.sh",
+              "chmod +x /tmp/deploy.sh",
+              "bash -x /tmp/deploy.sh"
+            ]' \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Mark Deploy Failed if Previous Step Failed
+        if: failure()
+        run: |
+          echo "DEPLOY_STATUS=failed" >> .env
+
+# --parameters 'commands=[
+#             "LOCK_FILE=/tmp/deploy.lock",
+#             "if [ -f \"$LOCK_FILE\" ]; then echo \"Another deployment is running. Exiting.\"; exit 0; fi",
+#             "touch $LOCK_FILE",
+
+#             "echo \"CLEANUP\"",
+#             "export HOME=/root",
+
+#             "export PM2_HOME=/root/.pm2",
+#             "chown -R root:root /opt/cloud-devops-project",
+
+#             "uptime",
+#             "cd /opt",
+#             "rm -rf cloud-devops-project",
+#             "mkdir cloud-devops-project",
+#             "cd cloud-devops-project",
+
+#             "echo \"Downloading artifact\"",
+#             "aws s3 cp s3://${{ env.S3_BUCKET }}/app-${{ github.sha }}.tar.gz app.tar.gz",
+
+#             "echo \"Extracting\"",
+#             "tar -xzf app.tar.gz",
+
+#             "echo \"Ecosystem file:\"",
+#             "test -f ecosystem.config.cjs || (echo \"Missing ecosystem file\" && exit 1)",
+
+#             "pm2 jlist | jq -r '\''.[] | [\"CPU=\" + (.monit.cpu|tostring), \"MEMORY=\" + (.monit.memory|tostring), \"PROCESS_STATUS=\" + .pm2_env.status, \"UPTIME=\" + (.pm2_env.pm_uptime|tostring), \"RESTART_COUNT=\" + (.pm2_env.restart_time|tostring)] | .[]'\'' > .pm2-env && source .pm2-env",
+
+#             "pm2 startOrRestart ecosystem.config.cjs --env development --update-env",
+#             "pm2 save",
+
+#             "rm -f $LOCK_FILE"
+#             ]' \
