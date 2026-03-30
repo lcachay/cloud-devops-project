@@ -7,7 +7,9 @@
 Next.js dashboard app that exposes CI/CD, process, and traffic metrics, to demonstrate Cloud and DevOps concepts.
 This application deploys through **GitHub Actions**, runs on an **EC2** instance, and uses **PM2** for process management.
 
-![Dashboard Screen Example]()
+<img width="500" height="302" alt="Dashboard Screen Dev" src="https://github.com/user-attachments/assets/4a073605-63f8-406a-bd2a-4367bce96ed6" />
+<img width="500" height="303" alt="Dashboard Screen Prod" src="https://github.com/user-attachments/assets/3b293ad8-d184-41e3-8443-2b40fed8649d" />
+
 
 ## Environment Setup
 
