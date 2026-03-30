@@ -27,12 +27,13 @@ fi
 # --- 1. Collect metrics ---
 CPU=$(pm2 jlist | jq '.[0].monit.cpu')
 MEMORY=$(pm2 jlist | jq '.[0].monit.memory')
+TOTAL_MEMORY=$(grep MemTotal /proc/meminfo | awk '{print $2}')
 PROCESS_STATUS=$(pm2 jlist | jq -r '.[0].pm2_env.status')
 UPTIME=$(pm2 jlist | jq '.[0].pm2_env.pm_uptime')
 RESTART_COUNT=$(pm2 jlist | jq '.[0].pm2_env.restart_time')
 
 # --- 2. Export them in the current shell ---
-export CPU MEMORY PROCESS_STATUS UPTIME RESTART_COUNT
+export CPU MEMORY TOTAL_MEMORY PROCESS_STATUS UPTIME RESTART_COUNT
 
 # --- 3. Start/restart PM2 as root, preserving env ---
 sudo -E pm2 startOrRestart ecosystem.config.cjs --env $ENVIRONMENT --update-env

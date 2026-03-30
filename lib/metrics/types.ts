@@ -14,18 +14,11 @@ export interface DashboardMetrics {
   processStatus: string;
   uptime: string;
   restartCount: number;
+  totalMemory: string;
 
   requestsPerSecond: number;
   totalRequests: number;
   totalErrors: number;
   errorRate: string;
   avgResponseTime: string;
-}
-
-export interface Pm2Metrics {
-  memory: string;
-  cpu: string;
-  processStatus: string;
-  uptime: string;
-  restartCount: number;
 }
