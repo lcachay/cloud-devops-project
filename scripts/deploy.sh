@@ -24,7 +24,7 @@ if [ ! -f ecosystem.config.cjs ]; then
     exit 1
 fi
 
-sudo -E pm2 restart ecosystem.config.cjs --env $ENVIRONMENT --update-env
+sudo -E pm2 startOrRestart ecosystem.config.cjs --env $ENVIRONMENT --update-env
 sudo -E pm2 save
 
 sudo -E pm2 save
